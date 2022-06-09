@@ -1,0 +1,23 @@
+﻿[WARNING][09/06/2022 13:41:07][Thread 0024]
+[akka.tcp://ClusterSystem@localhost:2550/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FClusterSystem%40localhost%3A2551-1/endpointWriter/endpointReader-akka.tcp%3A%2F%2FClusterSystem%40localhost%3A2551-1] 
+Deserialization failed for message with serializer id [6] and manifest []. 
+Transient association error (association remains live). Failed to deserialize payload object 
+when deserializing ActorSelectionMessage with payload [SerializerId=9, Manifest=A] addressed to 
+[system,distributedPubSubMediator]. Could not find any internal Akka.NET serializer with Id [9]. 
+Please create an issue in our GitHub at [https://github.com/akkadotnet/akka.net].. 
+Serializer Id [6] is used to instantiate 
+[Akka.Remote.Serialization.MessageContainerSerializer, Akka.Remote]. 
+You can add it by adding a fallback to your ActorSystem configuration by using
+[RemoteConfigFactory.Default()].
+Cause: System.Runtime.Serialization.SerializationException: 
+Failed to deserialize payload object when deserializing ActorSelectionMessage with payload 
+[SerializerId=9, Manifest=A] addressed to [system,distributedPubSubMediator]. 
+Could not find any internal Akka.NET serializer with Id [9]. 
+Please create an issue in our GitHub at [https://github.com/akkadotnet/akka.net].
+
+
+   Have checked config docs - https://getakka.net/articles/configuration/modules/akka.cluster.html
+
+   Reactive Applications in AKKA.NET
+
+   Tried Hyperion as stated here - https://github.com/akkadotnet/akka.net/issues/3031
