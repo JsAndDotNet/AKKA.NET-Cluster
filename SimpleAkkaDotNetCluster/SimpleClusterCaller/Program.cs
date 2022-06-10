@@ -15,7 +15,7 @@ try
     var clusterPorts = new List<int>() { 2551, 2552, 2553 };
 
     var _baseUrl = "akka.tcp://ClusterSystem@localhost:2551";
-    var _baseUrl2 = "akka.tcp://ClusterSystem@localhost:2551";
+    var _baseUrl2 = "akka.tcp://ClusterSystem@localhost:2552";
 
     var port = 2550;
     var baseLocation = Assembly.GetAssembly(typeof(Program));
