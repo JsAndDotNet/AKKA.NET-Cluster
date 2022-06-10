@@ -17,7 +17,7 @@ try
     var _baseUrl = "akka.tcp://ClusterSystem@localhost:2551";
     var _baseUrl2 = "akka.tcp://ClusterSystem@localhost:2552";
 
-    var port = 2550;
+    var thisPort = 3000;
     var baseLocation = Assembly.GetAssembly(typeof(Program));
     var dirInfo = new DirectoryInfo(baseLocation.Location);
     var hoconFilePath = dirInfo.Parent + "\\akka-hocon.conf";
@@ -27,7 +27,7 @@ try
     var config = ConfigurationFactory.ParseString(hoconFile.Descendants("hocon").Single().Value);
 
     var clusterNodeConfig =
-                        ConfigurationFactory.ParseString("akka.remote.dot-netty.tcp.port=" + port)
+                        ConfigurationFactory.ParseString("akka.remote.dot-netty.tcp.port=" + thisPort)
                             .WithFallback(config);
 
     //create an Akka system
@@ -47,15 +47,16 @@ try
 
     foreach (var clusterPort in clusterPorts)
     {
-        var clusterClient = actorSystem.ActorOf(clusterClientProps, "ping-" + clusterPort);
+        var actorName = "ping-" + clusterPort;
+        var clusterClient = actorSystem.ActorOf(clusterClientProps, actorName);
 
         var foundSerializer = actorSystem.Serialization.FindSerializerFor("Test");
 
+        //var resp = await clusterClient.Ask("Hello port " + clusterPort);
 
-        var resp = await clusterClient.Ask("Hello port " + clusterPort);
+        var resp = await clusterClient.Ask
+            (new ClusterClient.Send("ping-" + clusterPort, "Hello port " + clusterPort));
 
-        //var resp = await clusterClient.Ask
-        //    (new ClusterClient.Send("ping-" + clusterPort, "Hello port " + clusterPort));
 
         DisplayHelper.WriteLine("Cluster returned " + resp);
     }
