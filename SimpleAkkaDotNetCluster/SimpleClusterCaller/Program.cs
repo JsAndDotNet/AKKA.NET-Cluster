@@ -2,12 +2,10 @@
 
 
 using Akka.Actor;
-using Akka.Cluster.Tools.Client;
 using Akka.Configuration;
 using SimpleClusterLib;
 using System.Collections.Immutable;
-using System.Reflection;
-using System.Xml.Linq;
+using SimpleClusterCaller;
 
 try
 {
@@ -18,13 +16,8 @@ try
     var _baseUrl2 = "akka.tcp://ClusterSystem@localhost:2552";
 
     var thisPort = 3000;
-    var baseLocation = Assembly.GetAssembly(typeof(Program));
-    var dirInfo = new DirectoryInfo(baseLocation.Location);
-    var hoconFilePath = dirInfo.Parent + "\\akka-hocon.conf";
-    Console.WriteLine(hoconFilePath);
-    var hoconFile = XElement.Parse(File.ReadAllText(hoconFilePath));
-
-    var config = ConfigurationFactory.ParseString(hoconFile.Descendants("hocon").Single().Value);
+    var hoconFile = File.ReadAllText("akka-hocon.conf");
+    var config = ConfigurationFactory.ParseString(hoconFile);
 
     var clusterNodeConfig =
                         ConfigurationFactory.ParseString("akka.remote.dot-netty.tcp.port=" + thisPort)
@@ -32,32 +25,19 @@ try
 
     //create an Akka system
     Console.WriteLine("Create actor system");
-    var actorSystem = ActorSystem.Create("ClusterSystem", clusterNodeConfig);
+    var actorSystem = ActorSystem.Create("ClusterClientSystem", clusterNodeConfig);
     Console.WriteLine("Actor system created");
 
-    var intialContacts = ImmutableHashSet<ActorPath>.Empty
-                .Add(ActorPath.Parse(_baseUrl + "/system/receptionist"))
-                .Add(ActorPath.Parse(_baseUrl2 + "/system/receptionist"));
+    var initialContacts = ImmutableHashSet<ActorPath>.Empty
+                .Add(ActorPath.Parse(_baseUrl) / "system" / "receptionist")
+                .Add(ActorPath.Parse(_baseUrl2) / "system" / "receptionist");
 
-    var clusterClientSettings = ClusterClientSettings.Create(actorSystem)
-        .WithInitialContacts(intialContacts);
-
-
-    var clusterClientProps = ClusterClient.Props(clusterClientSettings);
-
+    var clusterClient = actorSystem.ActorOf(ClusterClientActor.Props(initialContacts), "cluster-client-actor");
+    
     foreach (var clusterPort in clusterPorts)
     {
         var actorName = "ping-" + clusterPort;
-        var clusterClient = actorSystem.ActorOf(clusterClientProps, actorName);
-
-        var foundSerializer = actorSystem.Serialization.FindSerializerFor("Test");
-
-        //var resp = await clusterClient.Ask("Hello port " + clusterPort);
-
-        var resp = await clusterClient.Ask
-            (new ClusterClient.Send("ping-" + clusterPort, "Hello port " + clusterPort));
-
-
+        var resp = await clusterClient.Ask<string>(new ServiceMessage(actorName, "Hello port " + clusterPort));
         DisplayHelper.WriteLine("Cluster returned " + resp);
     }
 }
